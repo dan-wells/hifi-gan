@@ -161,8 +161,8 @@ def train(rank, a, h):
                     with torch.no_grad():
                         mel_error = F.l1_loss(y_mel, y_g_hat_mel).item()
 
-                    print('Steps : {:d}, Gen Loss Total : {:4.3f}, Mel-Spec. Error : {:4.3f}, s/b : {:4.3f}'.
-                          format(steps, loss_gen_all, mel_error, time.time() - start_b))
+                    print('Steps : {:d}, Dis Loss Total : {:4.3f}, Gen Loss Total : {:4.3f}, Mel-Spec. Error : {:4.3f}, s/b : {:4.3f}'.
+                          format(steps, loss_disc_all, loss_gen_all, mel_error, time.time() - start_b))
 
                 # checkpointing
                 if steps % a.checkpoint_interval == 0 and steps != 0:
@@ -180,6 +180,7 @@ def train(rank, a, h):
 
                 # Tensorboard summary logging
                 if steps % a.summary_interval == 0:
+                    sw.add_scalar("training/dis_loss_total", loss_disc_all, steps)
                     sw.add_scalar("training/gen_loss_total", loss_gen_all, steps)
                     sw.add_scalar("training/mel_spec_error", mel_error, steps)
 
