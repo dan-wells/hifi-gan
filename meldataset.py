@@ -140,9 +140,8 @@ class MelDataset(torch.utils.data.Dataset):
                                   self.sampling_rate, self.hop_size, self.win_size, self.fmin, self.fmax,
                                   center=False)
         else:
-            mel = np.load(
-                os.path.join(self.base_mels_path, os.path.splitext(os.path.split(filename)[-1])[0] + '.npy'))
-            mel = torch.from_numpy(mel)
+            mel = torch.load(
+                os.path.join(self.base_mels_path, os.path.splitext(os.path.split(filename)[-1])[0] + '.pt'))
 
             if len(mel.shape) < 3:
                 mel = mel.unsqueeze(0)
