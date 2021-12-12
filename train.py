@@ -221,6 +221,7 @@ def train(rank, a, h):
                                               plot_spectrogram(y_hat_spec.squeeze(0).cpu().numpy()), steps)
 
                         val_err = val_err_tot / (j+1)
+                        print('Steps : {:d}, Val Mel-Spec. Error : {:4.3f}'.format(steps, val_err))
                         sw.add_scalar("validation/mel_spec_error", val_err, steps)
 
                     generator.train()
