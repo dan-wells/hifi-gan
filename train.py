@@ -197,6 +197,15 @@ def train(rank, a, h):
                             y_g_hat_mel = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate,
                                                           h.hop_size, h.win_size,
                                                           h.fmin, h.fmax_for_loss)
+                            # if fine-tuning, mel spec extraction here could be mismatched with
+                            # target features from elsewhere (but probably only at the end...)
+                            if a.fine_tuning:
+                                y_mel_len = y_mel.shape[2]
+                                y_g_hat_mel_len = y_g_hat_mel.shape[2]
+                                if y_mel_len != y_g_hat_mel_len:
+                                    min_len = min(y_mel_len, y_g_hat_mel_len)
+                                    y_mel = y_mel[:, :, :min_len]
+                                    y_g_hat_mel = y_g_hat_mel[:, :, :min_len]
                             val_err_tot += F.l1_loss(y_mel, y_g_hat_mel).item()
 
                             if j <= 4:
