@@ -50,9 +50,9 @@ def save_checkpoint(filepath, obj):
 
 
 def scan_checkpoint(cp_dir, prefix):
-    pattern = os.path.join(cp_dir, prefix + '????????')
-    cp_list = glob.glob(pattern)
+    cp_list = sorted(glob.glob(os.path.join(cp_dir, prefix + '*.pt')),
+                     key=lambda f: int(re.search('_(\d+).pt', f).group(1)))
     if len(cp_list) == 0:
         return None
-    return sorted(cp_list)[-1]
+    return cp_list[-1]
 
