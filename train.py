@@ -159,11 +159,11 @@ def train(rank, a, h):
             optim_g.step()
 
             if rank == 0:
+                with torch.no_grad():
+                    mel_error = F.l1_loss(y_mel, y_g_hat_mel).item()  # just for logging
+
                 # STDOUT logging
                 if steps % a.stdout_interval == 0:
-                    with torch.no_grad():
-                        mel_error = F.l1_loss(y_mel, y_g_hat_mel).item()
-
                     print('Steps : {:d}, Dis Loss Total : {:4.3f}, Gen Loss Total : {:4.3f}, Mel-Spec. Error : {:4.3f}, s/b : {:4.3f}'.
                           format(steps, loss_disc_all, loss_gen_all, mel_error, time.time() - start_b))
 
