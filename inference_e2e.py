@@ -37,10 +37,10 @@ def inference(a):
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
     generator.load_state_dict(state_dict_g['generator'])
 
-    filelist = glob.glob(os.path.join(a.input_mels_dir, '*.npy'))
     if h.gen_istft:
         stft = TorchSTFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
 
+    filelist = glob.glob(os.path.join(a.input_mels_dir, '*.pt'))
 
     os.makedirs(a.output_dir, exist_ok=True)
 
@@ -48,8 +48,7 @@ def inference(a):
     generator.remove_weight_norm()
     with torch.no_grad():
         for i, filename in enumerate(filelist):
-            x = np.load(filename)
-            x = torch.FloatTensor(x).to(device)
+            x = torch.load(filename).to(device)
             if len(x.shape) < 3:
                 x = x.unsqueeze(0)
             if not x.shape[1] == h.num_mels:
