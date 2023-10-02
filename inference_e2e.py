@@ -10,6 +10,7 @@ from scipy.io.wavfile import write
 from env import AttrDict
 from meldataset import MAX_WAV_VALUE
 from models import Generator
+from utils import TorchSTFT
 
 h = None
 device = None
@@ -33,11 +34,13 @@ def scan_checkpoint(cp_dir, prefix):
 
 def inference(a):
     generator = Generator(h).to(device)
-
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
     generator.load_state_dict(state_dict_g['generator'])
 
     filelist = glob.glob(os.path.join(a.input_mels_dir, '*.npy'))
+    if h.gen_istft:
+        stft = TorchSTFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
+
 
     os.makedirs(a.output_dir, exist_ok=True)
 
@@ -51,7 +54,13 @@ def inference(a):
                 x = x.unsqueeze(0)
             if not x.shape[1] == h.num_mels:
                 x = x.transpose(1, 2)
-            y_g_hat = generator(x)
+
+            if h.gen_istft:
+                spec, phase = generator(x)
+                y_g_hat = stft.inverse(spec, phase)
+            else:
+                y_g_hat = generator(x)
+
             audio = y_g_hat.squeeze()
             audio = audio * MAX_WAV_VALUE
             audio = audio.cpu().numpy().astype('int16')

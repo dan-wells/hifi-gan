@@ -93,7 +93,15 @@ class Generator(torch.nn.Module):
             for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
                 self.resblocks.append(resblock(h, ch, k, d))
 
-        self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3))
+        self.istft = h.gen_istft
+        if self.istft:
+            self.reflection_pad = torch.nn.ReflectionPad1d((1, 0))
+            self.post_n_fft = h.gen_istft_n_fft
+            self.conv_post = weight_norm(Conv1d(ch, self.post_n_fft + 2, 7, 1, padding=3))
+            # TODO: add TorchSTFT here?
+        else:
+            self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3))
+
         self.ups.apply(init_weights)
         self.conv_post.apply(init_weights)
 
@@ -110,10 +118,18 @@ class Generator(torch.nn.Module):
                     xs += self.resblocks[i*self.num_kernels+j](x)
             x = xs / self.num_kernels
         x = F.leaky_relu(x)
-        x = self.conv_post(x)
-        x = torch.tanh(x)
-
-        return x
+        
+        if self.istft:
+            x = self.reflection_pad(x)
+            x = self.conv_post(x)
+            spec = torch.exp(x[:, :self.post_n_fft // 2 + 1, :])
+            phase = torch.sin(x[:, self.post_n_fft // 2 + 1:, :])
+            # TODO: add istft here?
+            return spec, phase
+        else:
+            x = self.conv_post(x)
+            x = torch.tanh(x)
+            return x
 
     def remove_weight_norm(self):
         print('Removing weight norm...')
