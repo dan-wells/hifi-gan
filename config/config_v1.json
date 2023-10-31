@@ -22,6 +22,7 @@
     "loss_mel_weight": 45,
 
     "segment_size": 8192,
+    "gen_in_dim": 80,
     "num_mels": 80,
     "n_fft": 1024,
     "hop_size": 256,
