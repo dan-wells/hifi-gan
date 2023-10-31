@@ -252,8 +252,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_training_file', type=str, required=True,
-        help='File listing training data. Format should be <utt_id>[|<extra_fields>[|...]], '
-        'where training files are found in <input_wavs_dir>/<utt_id>.wav')
+        help='File listing training data. Format should be <utt_id>.wav[|<extra_fields>[|...]], '
+        'where training files are found under <input_wavs_dir>/')
     parser.add_argument('--input_validation_file', type=str, required=True,
         help='File listing validation data')
     parser.add_argument('--input_wavs_dir', type=str, required=True,
