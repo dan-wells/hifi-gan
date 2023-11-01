@@ -188,9 +188,21 @@ def train(rank, a, h):
 
                 # Tensorboard summary logging
                 if steps % a.summary_interval == 0:
-                    sw.add_scalar("training/dis_loss_total", loss_disc_all, steps)
-                    sw.add_scalar("training/gen_loss_total", loss_gen_all, steps)
-                    sw.add_scalar("training/mel_spec_error", loss_mel, steps)
+                    sw.add_scalar("generator/gen_loss_total", loss_gen_all, steps)
+                    sw.add_scalar("generator/gen_loss", (loss_gen_f + loss_gen_s) * h.loss_gen_weight, steps)
+                    sw.add_scalar("generator/fm_loss", (loss_fm_f + loss_fm_s) * h.loss_fm_weight, steps)
+                    sw.add_scalar("generator/mel_loss", loss_mel * h.loss_mel_weight, steps)
+                    sw.add_scalar("generator/mel_spec_error_train", loss_mel, steps)
+
+                    sw.add_scalar("discriminator/dis_loss_total", loss_disc_all, steps)
+                    df_scores_r = torch.cat([torch.flatten(i) for i in y_df_hat_r])
+                    ds_scores_r = torch.cat([torch.flatten(i) for i in y_ds_hat_r])
+                    dis_score_r = torch.mean(torch.cat((df_scores_r, ds_scores_r)))
+                    df_scores_g = torch.cat([torch.flatten(i) for i in y_df_hat_g])
+                    ds_scores_g = torch.cat([torch.flatten(i) for i in y_ds_hat_g])
+                    dis_score_g = torch.mean(torch.cat((df_scores_g, ds_scores_g)))
+                    sw.add_scalar("discriminator/dis_score_real", dis_score_r, steps)
+                    sw.add_scalar("discriminator/dis_score_gen", dis_score_g, steps)
 
                 # Validation
                 if steps % a.validation_interval == 0:  # and steps != 0:
@@ -234,7 +246,7 @@ def train(rank, a, h):
 
                         val_err = val_err_tot / (j+1)
                         print('Steps : {:d}, Val Mel-Spec. Error : {:4.3f}'.format(steps, val_err))
-                        sw.add_scalar("validation/mel_spec_error", val_err, steps)
+                        sw.add_scalar("generator/mel_spec_error_val", val_err, steps)
 
                     generator.train()
 
